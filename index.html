@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>ドリンクプレゼントキャンペーン</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      text-align: center;
+      padding: 32px 12px;
+      line-height: 1.6;
+    }
+    h1 {
+      font-size: 1.6rem;
+      margin-bottom: 12px;
+    }
+    p {
+      margin: 0 0 12px;
+      font-size: 1rem;
+    }
+    .screen {
+      display: none;
+    }
+    .screen.active {
+      display: block;
+    }
+    img {
+      max-width: 90%;
+      height: auto;
+      border-radius: 12px;
+      margin-top: 8px;
+    }
+    button {
+      margin-top: 16px;
+      padding: 10px 20px;
+      font-size: 1rem;
+      border-radius: 8px;
+      border: 1px solid #333;
+      background: #f5f5f5;
+      cursor: pointer;
+    }
+    button:active {
+      transform: translateY(1px);
+    }
+    .note {
+      margin-top: 16px;
+      font-size: 0.85rem;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+  <!-- 期間外（前・後） -->
+  <div id="screen-period-off" class="screen">
+    <h1>本日のキャンペーンは実施していません</h1>
+    <p>実施期間中にアクセスすると、<br>ドリンクプレゼント画面が表示されます。</p>
+    <p class="note">※この画面をスタッフに見せても景品は受け取れません。</p>
+  </div>
+
+  <!-- 初回アクセス（期間内・未使用） -->
+  <div id="screen-first" class="screen">
+    <h1>ドリンクプレゼント</h1>
+    <p>この画面をスタッフに見せてください。</p>
+    <img src="images/drink.png" alt="ドリンク画像">
+    <p class="note">※まだ交換は完了していません。<br>※スタッフが下のボタンを押すと利用済みになります。</p>
+    <!-- スタッフ用チェックボタン -->
+    <button id="staff-check-btn">スタッフ確認済みにする</button>
+  </div>
+
+  <!-- 利用済み画面（期間内・使用済み もしくは スタッフボタン押下後） -->
+  <div id="screen-used" class="screen">
+    <h1>ご利用ありがとうございました</h1>
+    <p>この端末では、すでにドリンクプレゼントを<br>ご利用済みです。</p>
+    <p class="note">※再度のご利用はできません。</p>
+  </div>
+
+  <script>
+    // ======== 🔧 設定エリア（ここだけ変えれば使い回し可能） ========
+
+    // 🗓 キャンペーンの実施期間（例：2025/12/05〜12/07の3日間）
+    const CAMPAIGN_START = new Date("2025-12-05T00:00:00+09:00");
+    const CAMPAIGN_END   = new Date("2025-12-07T23:59:59+09:00");
+
+    // 🏷 このキャンペーン専用のキー名（別イベントごとに変える）
+    const STORAGE_KEY = "campaign_drink_20251205_3days_staff";
+
+    // ======== ここから下は基本いじらなくてOK ========
+
+    function showScreen(id) {
+      document.querySelectorAll(".screen").forEach(el => {
+        el.classList.remove("active");
+      });
+      const target = document.getElementById(id);
+      if (target) target.classList.add("active");
+    }
+
+    (function () {
+      const now = new Date();
+
+      // 期間外 → 「実施していません」画面
+      if (now < CAMPAIGN_START || now > CAMPAIGN_END) {
+        showScreen("screen-period-off");
+        return;
+      }
+
+      // 期間内 → 利用済みかチェック
+      const isUsed = localStorage.getItem(STORAGE_KEY) === "1";
+
+      if (isUsed) {
+        // すでに利用済み
+        showScreen("screen-used");
+        return;
+      }
+
+      // 未使用 → ドリンク画面＋スタッフチェックボタン
+      showScreen("screen-first");
+
+      const staffBtn = document.getElementById("staff-check-btn");
+      if (staffBtn) {
+        staffBtn.addEventListener("click", () => {
+          // スタッフが押したタイミングで「利用済み」にする
+          localStorage.setItem(STORAGE_KEY, "1");
+          showScreen("screen-used");
+        });
+      }
+    })();
+  </script>
+</body>
+</html>
